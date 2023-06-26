@@ -11,6 +11,7 @@ import mekanism.api.gas.GasTank;
 import mekanism.api.gas.GasTankInfo;
 import mekanism.api.gas.IGasHandler;
 import mekanism.api.gas.IGasItem;
+import mekanism.common.Mekanism;
 import mekanism.common.MekanismFluids;
 import mekanism.common.Upgrade;
 import mekanism.common.Upgrade.IUpgradeInfoHandler;
@@ -37,8 +38,12 @@ import mekanism.common.util.InventoryUtils;
 import mekanism.common.util.ItemDataUtils;
 import mekanism.common.util.MekanismUtils;
 import mekanism.common.util.TileUtils;
+import net.minecraft.entity.EntityAreaEffectCloud;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.potion.PotionEffect;
+import net.minecraft.potion.PotionType;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.common.capabilities.Capability;
@@ -135,9 +140,22 @@ public class TileEntityElectrolyticSeparator extends TileEntityMachine implement
             } else if (prevEnergy >= getEnergy()) {
                 setActive(false);
             }
+
             int dumpAmount = 8 * (int) Math.pow(2, upgradeComponent.getUpgrades(Upgrade.SPEED));
+            if (dumpAmount != 0) {
+                if (rightTank.getGasType() != null && rightTank.getGasType().getID() == MekanismFluids.Chlorine.getID()) {
+                    EntityAreaEffectCloud affectCloud = new EntityAreaEffectCloud(world,
+                            (double) this.pos.getX(),
+                            (double) this.pos.getY(),
+                            (double) this.pos.getZ());
+                    affectCloud.setPotion(PotionType.getPotionTypeForName("poison"));
+                    affectCloud.setRadius(5.0F);
+                    world.spawnEntity(affectCloud);
+                }
+            }
             handleTank(leftTank, dumpLeft, MekanismUtils.getLeft(facing), dumpAmount);
             handleTank(rightTank, dumpRight, MekanismUtils.getRight(facing), dumpAmount);
+
             prevEnergy = getEnergy();
 
             int newRedstoneLevel = getRedstoneLevel();
